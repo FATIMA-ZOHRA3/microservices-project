@@ -1,0 +1,1205 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>EduGate — Système d'Inscription avec Compteur</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet"/>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #0a0e27;
+      color: #e2e8f0;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .app {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    .sidebar {
+      width: 280px;
+      background: #0f172a;
+      border-right: 1px solid #1e293b;
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      z-index: 100;
+    }
+
+    .logo-area {
+      padding: 28px 24px;
+      border-bottom: 1px solid #1e293b;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .logo-icon {
+      width: 42px;
+      height: 42px;
+      background: linear-gradient(135deg, #1e40af, #3b82f6);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 20px;
+      color: white;
+    }
+
+    .logo-text h1 {
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+      color: #ffffff;
+    }
+
+    .logo-text p {
+      font-size: 11px;
+      color: #94a3b8;
+      margin-top: 2px;
+    }
+
+    .nav {
+      flex: 1;
+      padding: 24px 16px;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      width: 100%;
+      border: none;
+      background: none;
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 500;
+      color: #94a3b8;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: left;
+      margin-bottom: 6px;
+    }
+
+    .nav-item:hover {
+      background: rgba(59,130,246,0.1);
+      color: #ffffff;
+    }
+
+    .nav-item.active {
+      background: linear-gradient(135deg, #1e40af, #3b82f6);
+      color: #ffffff;
+      box-shadow: 0 4px 12px rgba(59,130,246,0.3);
+    }
+
+    .nav-icon {
+      font-size: 18px;
+      width: 24px;
+    }
+
+    .status-bar {
+      padding: 20px 24px;
+      border-top: 1px solid #1e293b;
+      font-size: 11px;
+      color: #94a3b8;
+    }
+
+    .status-item {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+
+    .status-name {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .led {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #334155;
+      transition: all 0.2s;
+    }
+
+    .led.up {
+      background: #10b981;
+      box-shadow: 0 0 8px rgba(16,185,129,0.5);
+    }
+
+    .main {
+      margin-left: 280px;
+      flex: 1;
+      background: #0f172a;
+    }
+
+    .topbar {
+      background: #0a0e27;
+      border-bottom: 1px solid #1e293b;
+      padding: 0 32px;
+      height: 70px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+
+    .topbar-title {
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+      background: linear-gradient(135deg, #60a5fa, #3b82f6);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .stats-pills {
+      display: flex;
+      gap: 12px;
+    }
+
+    .stat-pill {
+      background: #1e293b;
+      padding: 8px 18px;
+      border-radius: 30px;
+      font-size: 13px;
+      color: #94a3b8;
+      border: 1px solid #334155;
+    }
+
+    .stat-pill strong {
+      color: #60a5fa;
+      font-weight: 700;
+      margin-left: 8px;
+      font-size: 16px;
+    }
+
+    .page {
+      padding: 32px;
+    }
+
+    .section {
+      display: none;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .section.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .page-header {
+      margin-bottom: 28px;
+    }
+
+    .page-header h2 {
+      font-size: 26px;
+      font-weight: 700;
+      letter-spacing: -0.4px;
+      background: linear-gradient(135deg, #ffffff, #94a3b8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 8px;
+    }
+
+    .page-header p {
+      color: #64748b;
+      font-size: 14px;
+    }
+
+    .card {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 16px;
+      overflow: hidden;
+      margin-bottom: 28px;
+      transition: all 0.2s;
+    }
+
+    .card:hover {
+      border-color: #3b82f6;
+      box-shadow: 0 8px 24px rgba(59,130,246,0.1);
+    }
+
+    .card-header {
+      padding: 18px 24px;
+      border-bottom: 1px solid #334155;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #0f172a;
+    }
+
+    .card-header h3 {
+      font-size: 16px;
+      font-weight: 600;
+      color: #f1f5f9;
+    }
+
+    .card-body {
+      padding: 24px;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+      margin-bottom: 32px;
+    }
+
+    .stat-card {
+      background: linear-gradient(135deg, #1e293b, #0f172a);
+      border: 1px solid #334155;
+      border-radius: 20px;
+      padding: 24px;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.2s;
+    }
+
+    .stat-card:hover {
+      transform: translateY(-2px);
+      border-color: #3b82f6;
+    }
+
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+    }
+
+    .stat-card.students::before { background: linear-gradient(90deg, #3b82f6, #60a5fa); }
+    .stat-card.courses::before { background: linear-gradient(90deg, #10b981, #34d399); }
+    .stat-card.enrollments::before { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
+
+    .stat-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #94a3b8;
+      margin-bottom: 12px;
+    }
+
+    .stat-value {
+      font-size: 42px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      color: #ffffff;
+      margin-bottom: 8px;
+    }
+
+    .stat-sub {
+      font-size: 12px;
+      color: #64748b;
+    }
+
+    .table-wrapper {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th {
+      text-align: left;
+      padding: 14px 16px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #94a3b8;
+      border-bottom: 1px solid #334155;
+      background: #0f172a;
+    }
+
+    td {
+      padding: 14px 16px;
+      border-bottom: 1px solid #1e293b;
+      color: #cbd5e1;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    tr:hover td {
+      background: rgba(59,130,246,0.05);
+    }
+
+    .form-grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    .form-grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    label {
+      font-size: 12px;
+      font-weight: 600;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    input, select {
+      padding: 11px 14px;
+      border: 1px solid #334155;
+      border-radius: 10px;
+      font-size: 14px;
+      font-family: inherit;
+      transition: all 0.2s;
+      background: #0f172a;
+      color: #e2e8f0;
+    }
+
+    input::placeholder {
+      color: #475569;
+    }
+
+    input:focus, select:focus {
+      outline: none;
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59,130,246,0.2);
+      background: #1e293b;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 11px 22px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #1e40af, #3b82f6);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: linear-gradient(135deg, #3b82f6, #60a5fa);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(59,130,246,0.4);
+    }
+
+    .btn-success {
+      background: linear-gradient(135deg, #065f46, #10b981);
+      color: white;
+    }
+
+    .btn-success:hover {
+      background: linear-gradient(135deg, #10b981, #34d399);
+      transform: translateY(-1px);
+    }
+
+    .btn-danger {
+      background: #7f1d1d;
+      color: #fca5a5;
+      border: 1px solid #991b1b;
+    }
+
+    .btn-danger:hover {
+      background: #991b1b;
+      color: white;
+    }
+
+    .btn-secondary {
+      background: #1e293b;
+      color: #94a3b8;
+      border: 1px solid #334155;
+    }
+
+    .btn-secondary:hover {
+      background: #334155;
+      color: white;
+    }
+
+    .btn-sm {
+      padding: 6px 14px;
+      font-size: 12px;
+    }
+
+    .btn-block {
+      width: 100%;
+      justify-content: center;
+    }
+
+    .alert {
+      padding: 14px 18px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+      display: none;
+    }
+
+    .alert.show {
+      display: block;
+    }
+
+    .alert.success {
+      background: #064e3b;
+      color: #6ee7b7;
+      border: 1px solid #10b981;
+    }
+
+    .alert.error {
+      background: #7f1d1d;
+      color: #fca5a5;
+      border: 1px solid #dc2626;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 10px;
+      border-radius: 8px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .badge-blue {
+      background: #1e3a5f;
+      color: #60a5fa;
+    }
+
+    .badge-green {
+      background: #064e3b;
+      color: #6ee7b7;
+    }
+
+    .badge-amber {
+      background: #78350f;
+      color: #fbbf24;
+    }
+
+    .badge-gray {
+      background: #1e293b;
+      color: #94a3b8;
+    }
+
+    /* Timer styling */
+    .timer {
+      font-family: monospace;
+      font-size: 13px;
+      font-weight: 700;
+      background: #0f172a;
+      padding: 4px 8px;
+      border-radius: 6px;
+      display: inline-block;
+      letter-spacing: 1px;
+    }
+
+    .timer-warning {
+      color: #fbbf24;
+      animation: pulse 1s infinite;
+    }
+
+    .timer-critical {
+      color: #ef4444;
+      animation: pulse 0.5s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.6; }
+    }
+
+    .list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .list-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 20px;
+      background: #0f172a;
+      border: 1px solid #334155;
+      border-radius: 12px;
+      transition: all 0.2s;
+    }
+
+    .list-item:hover {
+      border-color: #3b82f6;
+      background: #1e293b;
+    }
+
+    .item-info h4 {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 4px;
+      color: #f1f5f9;
+    }
+
+    .item-info p {
+      font-size: 12px;
+      color: #94a3b8;
+    }
+
+    .item-actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .result-card {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 20px;
+      background: #0f172a;
+      border: 1px solid #334155;
+      border-radius: 12px;
+      margin-bottom: 12px;
+      transition: all 0.2s;
+    }
+
+    .result-card:hover {
+      border-color: #3b82f6;
+      background: #1e293b;
+    }
+
+    .result-info .result-title {
+      font-weight: 600;
+      margin-bottom: 4px;
+      color: #f1f5f9;
+    }
+
+    .result-info .result-date {
+      font-size: 12px;
+      color: #94a3b8;
+    }
+
+    .search-bar {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .search-bar .form-group {
+      flex: 1;
+      margin: 0;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: #64748b;
+    }
+
+    .spinner {
+      width: 16px;
+      height: 16px;
+      border: 2px solid #334155;
+      border-top-color: #3b82f6;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+      display: inline-block;
+      margin-right: 8px;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .two-columns {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 28px;
+    }
+
+    hr {
+      border: none;
+      border-top: 1px solid #334155;
+      margin: 20px 0;
+    }
+
+    .warning {
+      background: #78350f;
+      border: 1px solid #f59e0b;
+      border-radius: 10px;
+      padding: 12px 16px;
+      font-size: 12px;
+      color: #fbbf24;
+      margin-bottom: 20px;
+    }
+
+    @media (max-width: 768px) {
+      .sidebar { width: 80px; }
+      .logo-text, .nav-item span:not(.nav-icon), .status-bar { display: none; }
+      .main { margin-left: 80px; }
+      .stats-grid, .form-grid-2, .form-grid-3, .two-columns { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+<div class="app">
+
+  <aside class="sidebar">
+    <div class="logo-area">
+      <div class="logo">
+        <div class="logo-icon">EG</div>
+        <div class="logo-text">
+          <h1>EduGate</h1>
+          <p>Inscription Académique</p>
+        </div>
+      </div>
+    </div>
+    <nav class="nav">
+      <button class="nav-item active" onclick="switchTab('dashboard')">
+        <span class="nav-icon">◆</span><span>Tableau de bord</span>
+      </button>
+      <button class="nav-item" onclick="switchTab('students')">
+        <span class="nav-icon">●</span><span>Étudiants</span>
+      </button>
+      <button class="nav-item" onclick="switchTab('courses')">
+        <span class="nav-icon">■</span><span>Cours</span>
+      </button>
+      <button class="nav-item" onclick="switchTab('enroll')">
+        <span class="nav-icon">▲</span><span>Inscription</span>
+      </button>
+      <button class="nav-item" onclick="switchTab('search')">
+        <span class="nav-icon">◉</span><span>Recherche</span>
+      </button>
+    </nav>
+    <div class="status-bar">
+      <div class="status-item">
+        <span class="status-name"><span class="led" id="led-students"></span> Student API</span>
+        <span>8081</span>
+      </div>
+      <div class="status-item">
+        <span class="status-name"><span class="led" id="led-courses"></span> Course API</span>
+        <span>8082</span>
+      </div>
+      <div class="status-item">
+        <span class="status-name"><span class="led" id="led-enrollments"></span> Enrollment API</span>
+        <span>8083</span>
+      </div>
+    </div>
+  </aside>
+
+  <div class="main">
+    <header class="topbar">
+      <span class="topbar-title" id="topbar-title">DASHBOARD</span>
+      <div class="stats-pills">
+        <div class="stat-pill">ÉTUDIANTS <strong id="stat-students">—</strong></div>
+        <div class="stat-pill">COURS <strong id="stat-courses">—</strong></div>
+        <div class="stat-pill">INSCRIPTIONS <strong id="stat-enrollments">—</strong></div>
+      </div>
+    </header>
+
+    <div class="page">
+
+      <!-- Dashboard -->
+      <div id="tab-dashboard" class="section active">
+        <div class="page-header">
+          <h2>Tableau de bord</h2>
+          <p>Vue d'ensemble du système d'inscription</p>
+        </div>
+
+        <div class="stats-grid">
+          <div class="stat-card students">
+            <div class="stat-label">Total étudiants</div>
+            <div class="stat-value" id="dash-students">0</div>
+            <div class="stat-sub">Inscrits dans la plateforme</div>
+          </div>
+          <div class="stat-card courses">
+            <div class="stat-label">Total cours</div>
+            <div class="stat-value" id="dash-courses">0</div>
+            <div class="stat-sub">Disponibles</div>
+          </div>
+          <div class="stat-card enrollments">
+            <div class="stat-label">Total inscriptions</div>
+            <div class="stat-value" id="dash-enrollments">0</div>
+            <div class="stat-sub">Confirmées</div>
+          </div>
+        </div>
+
+        <div class="two-columns">
+          <div class="card">
+            <div class="card-header">
+              <h3>Derniers étudiants</h3>
+            </div>
+            <div class="table-wrapper">
+              <table>
+                <thead>
+                  <tr><th>CNIE</th><th>Nom complet</th><th>Email</th></tr>
+                </thead>
+                <tbody id="dash-students-list">
+                  <tr class="js-placeholder"><td colspan="3" class="empty-state"><div class="spinner"></div> Chargement...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <h3>Derniers cours</h3>
+            </div>
+            <div class="table-wrapper">
+              <table>
+                <thead>
+                  <tr><th>Titre</th><th>Crédits</th></tr>
+                </thead>
+                <tbody id="dash-courses-list">
+                  <tr class="js-placeholder"><td colspan="2" class="empty-state"><div class="spinner"></div> Chargement...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h3>Inscriptions récentes</h3>
+            <button class="btn btn-secondary btn-sm" onclick="refreshDashboard()">⟳ Actualiser</button>
+          </div>
+          <div class="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>CNIE</th>
+                  <th>Cours</th>
+                  <th>Date</th>
+                  <th>Annulation</th>
+                  <th>Temps restant</th>
+                </tr>
+              </thead>
+              <tbody id="dash-enrollments-list">
+                <tr class="js-placeholder"><td colspan="6" class="empty-state"><div class="spinner"></div> Chargement...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Students -->
+      <div id="tab-students" class="section">
+        <div class="page-header">
+          <h2>Gestion des étudiants</h2>
+          <p>Ajouter, consulter ou supprimer des étudiants</p>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><h3>Nouvel étudiant</h3></div>
+          <div class="card-body">
+            <div id="alert-student" class="alert"></div>
+            <div class="form-grid-2">
+              <div class="form-group"><label>CNIE *</label><input id="stu-cnie" type="text" placeholder="Ex: CD2387"/></div>
+              <div class="form-group"><label>Email *</label><input id="stu-email" type="email" placeholder="prenom.nom@domain.com"/></div>
+              <div class="form-group"><label>Prénom *</label><input id="stu-first" type="text" placeholder="Ahmed"/></div>
+              <div class="form-group"><label>Nom *</label><input id="stu-last" type="text" placeholder="Benali"/></div>
+            </div>
+            <button class="btn btn-primary" onclick="createStudent()">+ Créer l'étudiant</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><h3>Liste des étudiants</h3><span id="student-count"></span></div>
+          <div class="card-body" id="students-list"><div class="empty-state"><div class="spinner"></div> Chargement...</div></div>
+        </div>
+      </div>
+
+      <!-- Courses -->
+      <div id="tab-courses" class="section">
+        <div class="page-header">
+          <h2>Gestion des cours</h2>
+          <p>Ajouter ou supprimer des cours</p>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><h3>Nouveau cours</h3></div>
+          <div class="card-body">
+            <div id="alert-course" class="alert"></div>
+            <div class="form-grid-3">
+              <div class="form-group"><label>Titre *</label><input id="course-title" type="text" placeholder="Ex: Architecture Logicielle"/></div>
+              <div class="form-group"><label>Crédits *</label><input id="course-credits" type="number" min="1" max="10" placeholder="4"/></div>
+              <div class="form-group"><label>Description</label><input id="course-desc" type="text" placeholder="Optionnel"/></div>
+            </div>
+            <button class="btn btn-primary" onclick="createCourse()">+ Créer le cours</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><h3>Liste des cours</h3><span id="course-count"></span></div>
+          <div class="card-body" id="courses-list"><div class="empty-state"><div class="spinner"></div> Chargement...</div></div>
+        </div>
+      </div>
+
+      <!-- Enroll -->
+      <div id="tab-enroll" class="section">
+        <div class="page-header">
+          <h2>Nouvelle inscription</h2>
+          <p>Associer un étudiant à un cours</p>
+        </div>
+        <div class="card" style="max-width: 550px;">
+          <div class="card-header"><h3>Formulaire</h3></div>
+          <div class="card-body">
+            <div id="alert-enroll" class="alert"></div>
+            <div class="form-group"><label>CNIE étudiant *</label><input id="enroll-cnie" type="text" placeholder="Ex: CD2387"/></div>
+            <div class="form-group" style="margin-top: 20px;"><label>Cours *</label><select id="enroll-course"><option value="">— Sélectionner —</option></select></div>
+            <div class="warning">⚠️ Information : maximum 3 étudiants par cours, annulation possible uniquement dans les 24h suivant l'inscription.</div>
+            <button class="btn btn-success btn-block" onclick="createEnrollment()">✓ Valider l'inscription</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Search -->
+      <div id="tab-search" class="section">
+        <div class="page-header">
+          <h2>Recherche avancée</h2>
+          <p>Consulter les inscriptions d'un étudiant par son CNIE</p>
+        </div>
+        <div class="card">
+          <div class="card-header"><h3>Recherche</h3></div>
+          <div class="card-body">
+            <div id="alert-search" class="alert"></div>
+            <div class="search-bar">
+              <div class="form-group"><label>CNIE étudiant</label><input id="search-cnie" type="text" placeholder="Ex: CD2387" onkeydown="if(event.key==='Enter') searchStudent()"/></div>
+              <button class="btn btn-primary" onclick="searchStudent()" style="margin-top: 24px;">🔍 Rechercher</button>
+            </div>
+            <div id="search-results"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Stockage des intervalles de compteurs pour les nettoyer
+  let timerIntervals = [];
+
+  async function apiCall(url, method = 'GET', body = null) {
+    const options = { method, headers: { 'Content-Type': 'application/json' } };
+    if (body) options.body = JSON.stringify(body);
+    try {
+      const response = await fetch(url, options);
+      const data = await response.json().catch(() => ({}));
+      return { ok: response.ok, data };
+    } catch { return { ok: false, data: { error: 'Erreur réseau' } }; }
+  }
+
+  function showAlert(id, msg, ok) {
+    const el = document.getElementById(id);
+    el.innerHTML = msg; el.className = `alert show ${ok ? 'success' : 'error'}`;
+    setTimeout(() => el.classList.remove('show'), 5000);
+  }
+
+  function escapeHtml(s) { return String(s??'').replace(/[&<>]/g, function(m){ return m==='&'?'&amp;':m==='<'?'&lt;':'&gt;'; }); }
+
+  // Fonction pour formater le temps restant (HH:MM:SS)
+  function formatTimeRemaining(ms) {
+    if (ms <= 0) return 'Expiré';
+    const hours = Math.floor(ms / 3600000);
+    const minutes = Math.floor((ms % 3600000) / 60000);
+    const seconds = Math.floor((ms % 60000) / 1000);
+    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+  }
+
+  // Fonction pour obtenir la classe CSS du timer selon le temps restant
+  function getTimerClass(ms) {
+    if (ms <= 0) return '';
+    if (ms < 3600000) return 'timer-critical'; // Moins d'1h
+    if (ms < 7200000) return 'timer-warning'; // Moins de 2h
+    return '';
+  }
+
+  // Créer un compteur dégressif pour une inscription
+  function createTimer(enrollmentDate, enrollmentId, elementId) {
+    const createdAt = new Date(enrollmentDate);
+    const now = new Date();
+    const elapsed = now - createdAt;
+    const remaining = 86400000 - elapsed; // 24h en millisecondes
+
+    const timerElement = document.getElementById(elementId);
+    if (!timerElement) return null;
+
+    if (remaining <= 0) {
+      timerElement.innerHTML = '<span class="badge badge-gray">Délai expiré</span>';
+      return null;
+    }
+
+    // Mettre à jour le compteur chaque seconde
+    const interval = setInterval(() => {
+      const now2 = new Date();
+      const elapsed2 = now2 - createdAt;
+      const remaining2 = 86400000 - elapsed2;
+      
+      if (remaining2 <= 0) {
+        timerElement.innerHTML = '<span class="badge badge-gray">Délai expiré</span>';
+        clearInterval(interval);
+        // Rafraîchir la ligne pour désactiver le bouton d'annulation
+        refreshDashboard();
+      } else {
+        const timeStr = formatTimeRemaining(remaining2);
+        const timerClass = getTimerClass(remaining2);
+        timerElement.innerHTML = `<span class="timer ${timerClass}">⏱️ ${timeStr}</span>`;
+      }
+    }, 1000);
+
+    return interval;
+  }
+
+  function switchTab(tab) {
+    document.querySelectorAll('.nav-item').forEach(btn=>btn.classList.remove('active'));
+    event.target.closest('.nav-item').classList.add('active');
+    document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+    document.getElementById(`tab-${tab}`).classList.add('active');
+    document.getElementById('topbar-title').textContent = { dashboard:'DASHBOARD', students:'ÉTUDIANTS', courses:'COURS', enroll:'INSCRIPTION', search:'RECHERCHE' }[tab];
+    if (tab === 'students') loadStudents();
+    if (tab === 'courses') { loadCourses(); loadCourseSelect(); }
+    if (tab === 'enroll') loadCourseSelect();
+    if (tab === 'dashboard') refreshDashboard();
+  }
+
+  async function refreshDashboard() {
+    // Nettoyer les anciens intervalles
+    timerIntervals.forEach(interval => clearInterval(interval));
+    timerIntervals = [];
+
+    const [s, c, e] = await Promise.all([
+      apiCall('/api/students'), 
+      apiCall('/api/courses'), 
+      apiCall('/api/enrollments')
+    ]);
+    
+    // Étudiants
+    if (s.ok) {
+      document.getElementById('dash-students').textContent = s.data.length;
+      const tb = document.getElementById('dash-students-list');
+      if (tb.querySelector('.js-placeholder') || tb.innerHTML.includes('Chargement')) {
+        tb.innerHTML = s.data.slice(0, 5).map(s => `
+          <tr>
+            <td><span class="badge badge-gray">${escapeHtml(s.cnie)}</span></td>
+            <td>${escapeHtml(s.firstName)} ${escapeHtml(s.lastName)}</td>
+            <td style="color:#94a3b8">${escapeHtml(s.email)}</td>
+          </tr>
+        `).join('') || '<tr><td colspan="3" class="empty-state">Aucun étudiant</td></tr>';
+      }
+    }
+    
+    // Cours
+    if (c.ok) {
+      document.getElementById('dash-courses').textContent = c.data.length;
+      const tb = document.getElementById('dash-courses-list');
+      if (tb.querySelector('.js-placeholder') || tb.innerHTML.includes('Chargement')) {
+        tb.innerHTML = c.data.slice(0, 5).map(c => `
+          <tr>
+            <td>${escapeHtml(c.title)}</td>
+            <td><span class="badge badge-amber">${c.credits} cr.</span></td>
+          </tr>
+        `).join('') || '<tr><td colspan="2" class="empty-state">Aucun cours</td></tr>';
+      }
+    }
+    
+    // Inscriptions avec compteurs
+    if (e.ok) {
+      document.getElementById('dash-enrollments').textContent = e.data.length;
+      const tb = document.getElementById('dash-enrollments-list');
+      if (tb.querySelector('.js-placeholder') || tb.innerHTML.includes('Chargement')) {
+        if (e.data.length === 0) {
+          tb.innerHTML = '<tr><td colspan="6" class="empty-state">Aucune inscription</td></tr>';
+        } else {
+          // Générer le HTML avec des IDs uniques pour chaque compteur
+          tb.innerHTML = e.data.slice(0, 10).map((enroll, index) => {
+            const id = enroll.id || enroll.enrollmentId || '?';
+            const cnie = enroll.studentCnie || enroll.studentCnie || '?';
+            const courseName = enroll.courseName || 'Cours #' + (enroll.courseId || '?');
+            const date = (enroll.enrollmentDate || enroll.date || '').replace('T', ' ').slice(0, 16);
+            const deletable = enroll.deletable === true;
+            const createdAt = enroll.enrollmentDate || enroll.date;
+            const timerId = `timer-${id}-${index}`;
+            
+            return `
+              <tr>
+                <td><span class="badge badge-gray">#${id}</span></td>
+                <td><span class="badge badge-blue">${escapeHtml(cnie)}</span></td>
+                <td>${escapeHtml(courseName)}</td>
+                <td style="color:#94a3b8">${date}</td>
+                <td>${deletable ? `<button class="btn btn-danger btn-sm" onclick="cancelEnrollment(${id}, '${escapeHtml(cnie)}')">Annuler</button>` : '<span class="badge badge-gray">Non annulable</span>'}</td>
+                <td id="${timerId}">${deletable ? '<span class="timer">⏱️ Calcul...</span>' : '<span class="badge badge-gray">24h dépassé</span>'}</td>
+              </table>
+            `;
+          }).join('');
+          
+          // Démarrer les compteurs pour chaque inscription annulable
+          setTimeout(() => {
+            e.data.slice(0, 10).forEach((enroll, index) => {
+              if (enroll.deletable === true && (enroll.enrollmentDate || enroll.date)) {
+                const id = enroll.id || enroll.enrollmentId;
+                const createdAt = enroll.enrollmentDate || enroll.date;
+                const timerId = `timer-${id}-${index}`;
+                const timerElement = document.getElementById(timerId);
+                if (timerElement && document.getElementById(timerId)) {
+                  const interval = createTimer(createdAt, id, timerId);
+                  if (interval) timerIntervals.push(interval);
+                }
+              }
+            });
+          }, 100);
+        }
+      }
+    }
+    
+    updateStatusLights(s.ok, c.ok, e.ok);
+    updateTopbarStats(
+      s.ok ? s.data.length : null,
+      c.ok ? c.data.length : null,
+      e.ok ? e.data.length : null
+    );
+  }
+
+  async function loadStudents() {
+    const container = document.getElementById('students-list');
+    container.innerHTML = '<div class="empty-state"><div class="spinner"></div> Chargement...</div>';
+    const {ok,data}=await apiCall('/api/students');
+    document.getElementById('student-count').innerHTML = ok ? `${data.length} étudiant(s)` : '';
+    if(!ok||!data.length){ container.innerHTML='<div class="empty-state">Aucun étudiant</div>'; return; }
+    container.innerHTML='<div class="list">'+data.map(s=>`<div class="list-item"><div class="item-info"><h4>${escapeHtml(s.firstName)} ${escapeHtml(s.lastName)}</h4><p>${escapeHtml(s.cnie)} · ${escapeHtml(s.email)}</p></div><div class="item-actions"><span class="badge badge-gray">ID ${s.id}</span><button class="btn btn-danger btn-sm" onclick="deleteStudent(${s.id})">Supprimer</button></div></div>`).join('')+'</div>';
+  }
+
+  async function createStudent() {
+    const student={cnie:document.getElementById('stu-cnie').value.trim(),email:document.getElementById('stu-email').value.trim(),firstName:document.getElementById('stu-first').value.trim(),lastName:document.getElementById('stu-last').value.trim()};
+    if(!student.cnie||!student.email||!student.firstName||!student.lastName){ showAlert('alert-student','Tous les champs sont requis',false); return; }
+    const {ok,data}=await apiCall('/api/students','POST',student);
+    if(ok){ showAlert('alert-student',`Étudiant ${data.firstName} ${data.lastName} ajouté`,true); loadStudents(); refreshDashboard(); ['stu-cnie','stu-email','stu-first','stu-last'].forEach(id=>document.getElementById(id).value=''); }
+    else showAlert('alert-student',data.error||'Erreur',false);
+  }
+
+  async function deleteStudent(id){ if(!confirm('Supprimer cet étudiant ?'))return; const{ok}=await apiCall(`/api/students/${id}`,'DELETE'); if(ok){ showAlert('alert-student','Étudiant supprimé',true); loadStudents(); refreshDashboard(); } }
+
+  async function loadCourses() {
+    const container = document.getElementById('courses-list');
+    container.innerHTML = '<div class="empty-state"><div class="spinner"></div> Chargement...</div>';
+    const {ok,data}=await apiCall('/api/courses');
+    document.getElementById('course-count').innerHTML = ok ? `${data.length} cours(s)` : '';
+    if(!ok||!data.length){ container.innerHTML='<div class="empty-state">Aucun cours</div>'; return; }
+    container.innerHTML='<div class="list">'+data.map(c=>`<div class="list-item"><div class="item-info"><h4>${escapeHtml(c.title)}</h4><p>${escapeHtml(c.description||'—')}</p></div><div class="item-actions"><span class="badge badge-amber">${c.credits} cr.</span><button class="btn btn-danger btn-sm" onclick="deleteCourse(${c.id})">Supprimer</button></div></div>`).join('')+'</div>';
+  }
+
+  async function loadCourseSelect() {
+    const {ok,data}=await apiCall('/api/courses');
+    const sel=document.getElementById('enroll-course');
+    if(!ok||!sel)return;
+    const cur=sel.value;
+    sel.innerHTML='<option value="">— Sélectionner —</option>'+data.map(c=>`<option value="${c.id}" ${c.id==cur?'selected':''}>${escapeHtml(c.title)} (${c.credits} cr.)</option>`).join('');
+  }
+
+  async function createCourse() {
+    const course={title:document.getElementById('course-title').value.trim(),credits:parseInt(document.getElementById('course-credits').value)||0,description:document.getElementById('course-desc').value.trim()};
+    if(!course.title||course.credits<1){ showAlert('alert-course','Titre et crédits requis',false); return; }
+    const {ok,data}=await apiCall('/api/courses','POST',course);
+    if(ok){ showAlert('alert-course',`Cours "${data.title}" ajouté`,true); loadCourses(); loadCourseSelect(); refreshDashboard(); ['course-title','course-credits','course-desc'].forEach(id=>document.getElementById(id).value=''); }
+    else showAlert('alert-course',data.error||'Erreur',false);
+  }
+
+  async function deleteCourse(id){ if(!confirm('Supprimer ce cours ?'))return; const{ok}=await apiCall(`/api/courses/${id}`,'DELETE'); if(ok){ showAlert('alert-course','Cours supprimé',true); loadCourses(); loadCourseSelect(); refreshDashboard(); } }
+
+  async function createEnrollment() {
+    const cnie=document.getElementById('enroll-cnie').value.trim(), courseId=document.getElementById('enroll-course').value;
+    if(!cnie||!courseId){ showAlert('alert-enroll','CNIE et cours requis',false); return; }
+    const{ok,data}=await apiCall('/api/enrollments','POST',{cnie,courseId:parseInt(courseId)});
+    if(ok){ showAlert('alert-enroll',`Inscription ${data.studentCnie} → ${data.courseName}`,true); refreshDashboard(); document.getElementById('enroll-cnie').value=''; document.getElementById('enroll-course').value=''; }
+    else showAlert('alert-enroll',data.error||'Erreur',false);
+  }
+
+  async function searchStudent() {
+    const cnie=document.getElementById('search-cnie').value.trim();
+    if(!cnie){ showAlert('alert-search','Saisir un CNIE',false); return; }
+    const container=document.getElementById('search-results');
+    container.innerHTML='<div class="empty-state"><div class="spinner"></div> Recherche...</div>';
+    const{ok,data}=await apiCall(`/api/enrollments/student/${encodeURIComponent(cnie)}`);
+    if(!ok||!data.length){ container.innerHTML='<div class="empty-state">Aucune inscription trouvée</div>'; return; }
+    container.innerHTML=`<hr/><p style="margin-bottom:16px;"><strong>${data.length}</strong> inscription(s) pour <strong style="color:#3b82f6">${escapeHtml(cnie)}</strong></p>`+data.map((e, index) => {
+      const timerId = `search-timer-${e.enrollmentId}-${index}`;
+      // Démarrer le compteur après l'affichage
+      setTimeout(() => {
+        if (e.deletable && (e.date)) {
+          createTimer(e.date, e.enrollmentId, timerId);
+        }
+      }, 10);
+      return `<div class="result-card"><div><div class="result-title">${escapeHtml(e.courseName)}</div><div class="result-date">Inscrit le ${(e.date||'').replace('T',' ').slice(0,16)}</div></div><div class="item-actions"><span class="badge ${e.deletable?'badge-green':'badge-gray'}">${e.deletable?'Annulable':'Expiré'}</span>${e.deletable?`<button class="btn btn-danger btn-sm" onclick="cancelEnrollment(${e.enrollmentId},'${escapeHtml(cnie)}')">Annuler</button>`:''}<span id="${timerId}">${e.deletable ? '<span class="timer">⏱️ Chargement...</span>' : ''}</span></div></div>`;
+    }).join('');
+  }
+
+  async function cancelEnrollment(id, cnie) {
+    if(!confirm('⚠️ Attention : Cette action est irréversible. Voulez-vous vraiment annuler cette inscription ?')) return;
+    const{ok}=await apiCall(`/api/enrollments/${id}?cnie=${encodeURIComponent(cnie)}`,'DELETE');
+    if(ok){ 
+      showAlert('alert-search','✅ Inscription annulée avec succès',true); 
+      searchStudent(); 
+      refreshDashboard(); 
+    } else {
+      showAlert('alert-search','❌ Impossible d\'annuler cette inscription (délai dépassé ou erreur serveur)',false);
+    }
+  }
+
+  async function updateStatus() {
+    const[s,c,e]=await Promise.all([apiCall('/api/students'),apiCall('/api/courses'),apiCall('/api/enrollments')]);
+    updateStatusLights(s.ok,c.ok,e.ok);
+    updateTopbarStats(s.ok?s.data.length:null,c.ok?c.data.length:null,e.ok?e.data.length:null);
+  }
+
+  function updateStatusLights(s,c,e){ document.getElementById('led-students').className=`led ${s?'up':''}`; document.getElementById('led-courses').className=`led ${c?'up':''}`; document.getElementById('led-enrollments').className=`led ${e?'up':''}`; }
+
+  function updateTopbarStats(s,c,e){ if(s!==null)document.getElementById('stat-students').innerHTML=s; if(c!==null)document.getElementById('stat-courses').innerHTML=c; if(e!==null)document.getElementById('stat-enrollments').innerHTML=e; }
+
+  refreshDashboard(); 
+  setInterval(updateStatus, 30000);
+</script>
+</body>
+</html>

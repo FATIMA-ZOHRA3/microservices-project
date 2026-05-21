@@ -1,0 +1,82 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+
+  # ── Thymeleaf (SSR) ────────────────────────────────────────────────────────
+  thymeleaf:
+    prefix: classpath:/templates/
+    suffix: .html
+    cache: false
+    reactive:
+      max-chunk-size: 4096  # À AJOUTER - important pour WebFlux
+
+  # ── Ressources statiques ────────────────────────────────────────────────────
+  webflux:
+    static-path-pattern: /static/**
+  web:
+    resources:
+      static-locations: classpath:/static/,classpath:/public/
+      # À AJOUTER - permet les fichiers JS/CSS
+
+  # ── Spring Cloud Gateway ───────────────────────────────────────────────────
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: true
+          lower-case-service-id: true
+      routes:
+        - id: student-service
+          uri: lb://student-service
+          predicates:
+            - Path=/api/students/**
+          filters:
+            - StripPrefix=0  # À AJOUTER - garde le chemin intact
+
+        - id: course-service
+          uri: lb://course-service
+          predicates:
+            - Path=/api/courses/**
+          filters:
+            - StripPrefix=0
+
+        - id: enrollment-service
+          uri: lb://enrollment-service
+          predicates:
+            - Path=/api/enrollments/**
+          filters:
+            - StripPrefix=0
+
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins: "*"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowedHeaders: "*"
+            allowCredentials: false  # À MODIFIER - false pour "*"
+
+# ── Eureka ────────────────────────────────────────────────────────────────────
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+    fetch-registry: true  # À AJOUTER
+    register-with-eureka: true  # À AJOUTER
+  instance:
+    prefer-ip-address: true
+    hostname: localhost  # À AJOUTER
+
+# ── Logging ───────────────────────────────────────────────────────────────────
+logging:
+  level:
+    com.demo.gateway: DEBUG
+    org.springframework.cloud.gateway: INFO
+    org.springframework.web.reactive: DEBUG  # À AJOUTER - pour debug
